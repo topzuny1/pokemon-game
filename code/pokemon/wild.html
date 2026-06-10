@@ -1,0 +1,236 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Game - 야생 구역</title>
+    <style>
+        body { min-height: 100vh; background-color: #0b0e14; color: #ffffff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; margin: 0; box-sizing: border-box; }
+        .game-container { width: min(100%, 90vw); max-width: 500px; background: rgba(15, 23, 42, 0.8); border: 2px solid #334155; border-radius: 16px; padding: 25px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* ⚡ 어드민 배너 및 치트 버튼 */
+        .admin-banner { background: rgba(239, 68, 68, 0.2); border: 1px dashed #ef4444; border-radius: 8px; padding: 10px; margin-bottom: 15px; display: none; }
+        .admin-banner.active { display: block; }
+        .cheat-btn { background: #ef4444; color: white; border: none; padding: 8px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 5px; font-size: 0.85rem; transition: background 0.2s; }
+        .cheat-btn:hover { background: #dc2626; }
+        .cheat-status { color: #fca5a5; font-size: 0.85rem; margin-top: 4px; font-weight: bold; }
+
+        .floor-tag { font-size: 1.2rem; color: #3b82f6; font-weight: bold; margin-bottom: 15px; }
+        
+        /* 포켓몬 출현 보드 */
+        .pokemon-box { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #475569; min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pokemon-img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 10px; }
+        .pokemon-name { font-size: 1.4rem; font-weight: bold; }
+        .rarity-badge { font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; margin-top: 5px; font-weight: bold; }
+        
+        /* 볼 선택 그리드 */
+        .ball-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .ball-btn { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.95rem; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: background 0.2s; }
+        .ball-btn:hover { background: #475569; }
+        .ball-count { font-size: 0.8rem; color: #94a3b8; }
+        .infinite-text { color: #34d399; font-weight: bold; }
+
+        /* 🕹️ 하단 제어 버튼 레이아웃 수정 */
+        .action-buttons { display: flex; flex-direction: column; gap: 12px; }
+        .action-btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 1.05rem; cursor: pointer; transition: all 0.2s; }
+        
+        .run-btn { background: #64748b; color: white; }
+        .run-btn:hover { background: #475569; }
+        
+        /* 💡 강조된 돌아가기 버튼 스타일 */
+        .home-btn { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .home-btn:hover { background: #2563eb; transform: translateY(-1px); }
+        
+        /* 시스템 로그 창 */
+        .log-box { background: #0f172a; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 0.9rem; color: #cbd5e1; min-height: 40px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div id="adminBanner" class="admin-banner">
+            <span style="color:#ef4444; font-weight:bold;">⚡ 어드민 디버그 활성화 (몬스터볼 무한)</span><br>
+            <button class="cheat-btn" onclick="triggerLegendaryCheat()">🔴 다음 탐색 전설 100% 고정</button>
+            <div id="cheatStatus" class="cheat-status"></div>
+        </div>
+
+        <div class="floor-tag" id="floorDisplay">현재 위치: 1층</div>
+
+        <div class="pokemon-box">
+            <img id="pokeImg" class="pokemon-img" src="" alt="포켓몬 이미지" style="display:none;">
+            <div id="pokeName" class="pokemon-name">포켓몬을 탐색하는 중...</div>
+            <div id="pokeRarity" class="rarity-badge" style="display:none;"></div>
+        </div>
+
+        <div class="ball-grid">
+            <button class="ball-btn" onclick="throwBall('normal')">🔴 일반볼 <span class="ball-count" id="count-normal">개수: 0</span></button>
+            <button class="ball-btn" onclick="throwBall('super')">🔵 슈퍼볼 <span class="ball-count" id="count-super">개수: 0</span></button>
+            <button class="ball-btn" onclick="throwBall('hyper')">🟡 하이퍼볼 <span class="ball-count" id="count-hyper">개수: 0</span></button>
+            <button class="ball-btn" onclick="throwBall('master')">🟣 마스터볼 <span class="ball-count" id="count-master">개수: 0</span></button>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn run-btn" onclick="runAway()">🏃도망치기</button>
+            <button class="action-btn home-btn" onclick="location.href='index.html'">🏠 메인 화면으로 돌아가기</button>
+        </div>
+
+        <div class="log-box" id="logBox">풀숲을 헤치며 야생 포켓몬을 찾는 중...</div>
+    </div>
+
+    <script>
+        // 가상 샘플 데이터 셋업 (테스트용)
+        const pokemonDatabase = [
+            { id: 1, name: "피카츄", rarity: "일반", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" },
+            { id: 2, name: "꼬부기", rarity: "일반", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" },
+            { id: 3, name: "망나뇽", rarity: "희귀", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/149.png" },
+            { id: 4, name: "뮤츠", rarity: "전설", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png" },
+            { id: 5, name: "루기아", rarity: "전설", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/249.png" }
+        ];
+
+        let currentPokemon = null;
+        let isAdmin = false;
+        let legendaryCheatActive = false; 
+
+        function updateUI() {
+            isAdmin = localStorage.getItem('adminMode') === 'true';
+            
+            const adminBanner = document.getElementById('adminBanner');
+            if(isAdmin) {
+                adminBanner.classList.add('active');
+            } else {
+                adminBanner.classList.remove('active');
+                legendaryCheatActive = false;
+            }
+
+            const balls = ['normal', 'super', 'hyper', 'master'];
+            balls.forEach(type => {
+                const countSpan = document.getElementById(`count-${type}`);
+                if (isAdmin) {
+                    countSpan.innerHTML = `<span class="infinite-text">[무한]</span>`;
+                } else {
+                    let currentCount = localStorage.getItem(`ball_${type}`);
+                    if(currentCount === null) {
+                        currentCount = type === 'normal' ? 5 : type === 'super' ? 2 : type === 'hyper' ? 1 : 0;
+                        localStorage.setItem(`ball_${type}`, currentCount);
+                    }
+                    countSpan.textContent = `개수: ${currentCount}개`;
+                }
+            });
+
+            const currentFloor = localStorage.getItem('currentFloor') || 1;
+            document.getElementById('floorDisplay').textContent = `현재 위치: ${currentFloor}층`;
+        }
+
+        function triggerLegendaryCheat() {
+            if(!isAdmin) return;
+            legendaryCheatActive = true;
+            document.getElementById('cheatStatus').textContent = "📢 다음 등장 포켓몬은 '전설'입니다.";
+            spawnPokemon();
+        }
+
+        function spawnPokemon() {
+            let pool = [];
+            
+            if (legendaryCheatActive) {
+                pool = pokemonDatabase.filter(p => p.rarity === "전설");
+                legendaryCheatActive = false; 
+                document.getElementById('cheatStatus').textContent = "";
+            } else {
+                const rand = Math.random() * 100;
+                if (rand < 5) { 
+                    pool = pokemonDatabase.filter(p => p.rarity === "전설");
+                } else if (rand < 25) { 
+                    pool = pokemonDatabase.filter(p => p.rarity === "희귀");
+                }
+                
+                if (pool.length === 0) {
+                    pool = pokemonDatabase.filter(p => p.rarity === "일반");
+                }
+            }
+
+            currentPokemon = pool[Math.floor(Math.random() * pool.length)];
+
+            const imgEl = document.getElementById('pokeImg');
+            const nameEl = document.getElementById('pokeName');
+            const rarityEl = document.getElementById('pokeRarity');
+
+            imgEl.src = currentPokemon.image;
+            imgEl.style.display = 'block';
+            nameEl.textContent = currentPokemon.name;
+            
+            rarityEl.textContent = `${currentPokemon.rarity} 등급`;
+            rarityEl.className = `rarity-badge rarity-${currentPokemon.rarity}`;
+            rarityEl.style.display = 'inline-block';
+            
+            if(currentPokemon.rarity === '전설') rarityEl.style.background = '#ef4444';
+            else if(currentPokemon.rarity === '희귀') rarityEl.style.background = '#f59e0b';
+            else rarityEl.style.background = '#64748b';
+
+            document.getElementById('logBox').textContent = `앗! 야생의 [${currentPokemon.name}]이(가) 나타났다!`;
+        }
+
+        function throwBall(type) {
+            if (!currentPokemon) return;
+
+            let currentCount = parseInt(localStorage.getItem(`ball_${type}`)) || 0;
+
+            if (!isAdmin) {
+                if (currentCount <= 0) {
+                    document.getElementById('logBox').textContent = `❌ 보유하신 ${type}볼이 부족하여 던질 수 없습니다!`;
+                    return;
+                }
+                localStorage.setItem(`ball_${type}`, currentCount - 1);
+            }
+
+            let catchRate = 0;
+            if (type === 'normal') catchRate = 30;
+            else if (type === 'super') catchRate = 50;
+            else if (type === 'hyper') catchRate = 70;
+            else if (type === 'master') catchRate = 100;
+
+            if (isAdmin) catchRate = 100;
+
+            const roll = Math.random() * 100;
+            const logBox = document.getElementById('logBox');
+
+            if (roll <= catchRate) {
+                logBox.innerHTML = `🎉 포획 성공! <strong>[${currentPokemon.name}]</strong>을(를) 붙잡았습니다!`;
+                
+                let caught = JSON.parse(localStorage.getItem('caughtPokemons')) || {};
+                caught[currentPokemon.id] = {
+                    id: currentPokemon.id,
+                    koreanName: currentPokemon.name,
+                    rarity: currentPokemon.rarity,
+                    image: currentPokemon.image
+                };
+                localStorage.setItem('caughtPokemons', JSON.stringify(caught));
+
+                let floor = parseInt(localStorage.getItem('currentFloor')) || 1;
+                if(floor < 100) {
+                    localStorage.setItem('currentFloor', floor + 1);
+                }
+
+                currentPokemon = null;
+                setTimeout(() => { updateUI(); spawnPokemon(); }, 2000);
+            } else {
+                logBox.textContent = `💨 아쉽다! [${currentPokemon.name}]이(가) 볼에서 빠져나왔습니다.`;
+                updateUI();
+            }
+        }
+
+        function runAway() {
+            document.getElementById('logBox').textContent = `안전하게 도망쳤습니다. 다음 층 구역으로 이동합니다.`;
+            let floor = parseInt(localStorage.getItem('currentFloor')) || 1;
+            if(floor < 100) localStorage.setItem('currentFloor', floor + 1);
+            
+            currentPokemon = null;
+            setTimeout(() => { updateUI(); spawnPokemon(); }, 1200);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            spawnPokemon();
+        });
+    </script>
+</body>
+</html>

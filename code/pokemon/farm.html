@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon - 파밍</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body {
+            width: 100vw; height: 100vh;
+            background-color: #0b0e14; color: #ffffff;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        /* 상태 패널 */
+        .status-panel {
+            width: 750px; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding: 10px 20px;
+            background: #1e293b; border: 2px solid #334155; border-radius: 10px;
+        }
+        
+        .nav-links { display: flex; gap: 10px; align-items: center; }
+
+        /* 뒤로가기 버튼 */
+        .back-link {
+            background: #0f172a; color: #94a3b8; border: 1px solid #475569;
+            padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;
+            font-weight: 600; transition: all 0.2s;
+        }
+        .back-link:hover { background: #3b82f6; color: white; border-color: #60a5fa; }
+
+        /* 어드민 버튼 */
+        .admin-btn {
+            background: #991b1b; color: #fca5a5; border: 1px solid #b91c1c;
+            padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;
+            font-weight: bold; cursor: pointer; transition: all 0.2s;
+        }
+        .admin-btn:hover { background: #dc2626; color: white; border-color: #ef4444; box-shadow: 0 0 10px rgba(220, 38, 38, 0.5); }
+
+        /* 보유 몬스터볼 표시 */
+        .ball-display {
+            display: flex;
+            gap: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .ball-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ball-count { color: #f59e0b; }
+
+        /* 대사창 */
+        .logue-dialogue {
+            width: 750px; height: 130px;
+            background: linear-gradient(135deg, #0f172a 0%, #070b15 100%);
+            border: 3px solid #3b82f6; border-radius: 14px;
+            padding: 22px; font-size: 1.25rem; line-height: 1.6;
+            margin-bottom: 25px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        /* 그리드 컨테이너 */
+        .grid-container {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 750px;
+        }
+
+        /* 포켓로그 전투 커맨드 스타일 버튼 */
+        .grid-btn {
+            background: #1e293b; border: 2px solid #334155; color: #cbd5e1;
+            font-size: 1.2rem; font-weight: bold; padding: 16px; border-radius: 10px;
+            cursor: pointer; text-align: left; padding-left: 30px; transition: all 0.2s;
+            position: relative;
+        }
+        .grid-btn:hover {
+            background: #3b82f6; color: white; border-color: #60a5fa;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+        .grid-btn:hover::before {
+            content: '▶'; position: absolute; left: 12px; color: #fff;
+        }
+        .grid-btn:disabled {
+            background: #0f172a !important; color: #475569 !important;
+            border-color: #1e293b !important; cursor: not-allowed; transform: none !important;
+        }
+        .grid-btn:disabled::before { display: none; }
+
+        /* 보상 팝업 */
+        .reward-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.95);
+            border: 3px solid #3b82f6;
+            border-radius: 14px;
+            padding: 30px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 400px;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+        }
+
+        .reward-popup.show {
+            display: flex;
+        }
+
+        .reward-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f59e0b;
+        }
+
+        .reward-item {
+            font-size: 1.3rem;
+            color: #34d399;
+            font-weight: bold;
+        }
+
+        .reward-item.fail {
+            color: #f87171;
+        }
+
+        .popup-close {
+            padding: 10px 20px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .popup-close:hover {
+            background: #60a5fa;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="status-panel">
+        <div class="nav-links">
+            <a href="index.html" class="back-link">◀ LEAVE (메인으로)</a>
+            <button id="adminResetBtn" class="admin-btn" onclick="resetCooldownAdmin()" style="display:none">⚙️ ADMIN (쿨초기화: F2)</button>
+            <button id="adminExitBtn" class="admin-btn" onclick="exitAdminMode()" style="display:none">🔒 ADMIN OFF</button>
+        </div>
+        <div class="ball-display">
+            <div class="ball-item">
+                <span>🔴 일반:</span>
+                <span class="ball-count" id="ballNormalCount">0</span>
+            </div>
+            <div class="ball-item">
+                <span>🟠 슈퍼:</span>
+                <span class="ball-count" id="ballSuperCount">0</span>
+            </div>
+            <div class="ball-item">
+                <span>🟡 하이퍼:</span>
+                <span class="ball-count" id="ballHyperCount">0</span>
+            </div>
+            <div class="ball-item">
+                <span>🟣 마스터:</span>
+                <span class="ball-count" id="ballMasterCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="logue-dialogue">
+        <span id="dialogue-text">어느 구역을 탐색하시겠습니까? 탐색 장소를 정해 주십시오.</span>
+    </div>
+
+    <div class="grid-container">
+        <button class="grid-btn" id="btn-tree" onclick="startFarming('나무')">🌲 WOODS (나무)</button>
+        <button class="grid-btn" id="btn-rock" onclick="startFarming('바위')">🪨 CRAG (바위)</button>
+        <button class="grid-btn" id="btn-cave" onclick="startFarming('동굴')">🕳️ CAVE (동굴)</button>
+        <button class="grid-btn" id="btn-grass" onclick="startFarming('수풀')">🌿 BUSH (수풀)</button>
+    </div>
+
+    <!-- 보상 팝업 -->
+    <div class="overlay" id="overlay"></div>
+    <div class="reward-popup" id="rewardPopup">
+        <div class="reward-title" id="rewardTitle">탐색 완료!</div>
+        <div class="reward-item" id="rewardText"></div>
+        <button class="popup-close" onclick="closeRewardPopup()">확인</button>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            PLAYER: 'pokemonData',
+            LAST_FARMING: 'lastFarmingTime',
+            ADMIN: 'adminMode'
+        };
+
+        const COOLDOWN_TIME = 2 * 60 * 1000;
+        const BALL_PROBABILITIES = {
+            normal: 0.40,
+            super: 0.35,
+            hyper: 0.20,
+            master: 0.05
+        };
+
+        const BALL_LABELS = {
+            normal: '일반',
+            super: '슈퍼',
+            hyper: '하이퍼',
+            master: '마스터'
+        };
+
+        const BALL_TYPES = Object.keys(BALL_PROBABILITIES);
+        const buttonList = Array.from(document.querySelectorAll('.grid-btn'));
+
+        let typingTimer = null;
+        let isTyping = false;
+        let cooldownTimerId = null;
+
+        function getStorage(key, fallback = null) {
+            const value = localStorage.getItem(key);
+            return value === null ? fallback : value;
+        }
+
+        function setStorage(key, value) {
+            localStorage.setItem(key, value);
+        }
+
+        function removeStorage(key) {
+            localStorage.removeItem(key);
+        }
+
+        function getPlayerData() {
+            const saved = getStorage(STORAGE_KEYS.PLAYER);
+            return saved ? JSON.parse(saved) : null;
+        }
+
+        function setPlayerData(data) {
+            setStorage(STORAGE_KEYS.PLAYER, JSON.stringify(data));
+        }
+
+        function ensurePlayerData() {
+            if (!getPlayerData()) {
+                setPlayerData({
+                    currentFloor: 1,
+                    balls: { normal: 0, super: 0, hyper: 0, master: 0 }
+                });
+            }
+        }
+
+        function isAdminMode() {
+            return getStorage(STORAGE_KEYS.ADMIN) === 'true';
+        }
+
+        function renderAdminControls() {
+            const resetBtn = document.getElementById('adminResetBtn');
+            const exitBtn = document.getElementById('adminExitBtn');
+            if (!resetBtn || !exitBtn) return;
+
+            const active = isAdminMode();
+            resetBtn.style.display = active ? 'inline-block' : 'none';
+            exitBtn.style.display = active ? 'inline-block' : 'none';
+        }
+
+        function exitAdminMode() {
+            removeStorage(STORAGE_KEYS.ADMIN);
+            renderAdminControls();
+            typeWriter('⚠️ 어드민 모드가 해제되었습니다. 일반 모드로 전환합니다.');
+        }
+
+        function updateBallDisplay() {
+            const data = getPlayerData() || {};
+            const balls = data.balls || { normal: 0, super: 0, hyper: 0, master: 0 };
+
+            document.getElementById('ballNormalCount').textContent = balls.normal;
+            document.getElementById('ballSuperCount').textContent = balls.super;
+            document.getElementById('ballHyperCount').textContent = balls.hyper;
+            document.getElementById('ballMasterCount').textContent = balls.master;
+        }
+
+        function typeWriter(text, callback) {
+            clearTimeout(typingTimer);
+            isTyping = true;
+
+            const element = document.getElementById('dialogue-text');
+            element.textContent = '';
+            let index = 0;
+            const speed = 70;
+
+            function type() {
+                if (index < text.length) {
+                    element.textContent += text.charAt(index);
+                    index += 1;
+                    typingTimer = setTimeout(type, speed);
+                } else {
+                    isTyping = false;
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        function getRandomBallType() {
+            const random = Math.random();
+            let cumulative = 0;
+
+            for (const type of BALL_TYPES) {
+                cumulative += BALL_PROBABILITIES[type];
+                if (random < cumulative) return type;
+            }
+            return 'normal';
+        }
+
+        function getRandomBalls() {
+            const ballType = getRandomBallType();
+            const amount = Math.floor(Math.random() * 3) + 1;
+            return { type: ballType, amount };
+        }
+
+        function toggleFarmingButtons(enabled) {
+            buttonList.forEach(btn => {
+                btn.disabled = !enabled;
+            });
+        }
+
+        function startFarming(place) {
+            setStorage(STORAGE_KEYS.LAST_FARMING, Date.now().toString());
+            toggleFarmingButtons(false);
+
+            const success = Math.random() < 0.7;
+            const reward = success ? getRandomBalls() : null;
+            const message = success
+                ? `[${place}] 구역을 탐색 완료했습니다! 보상으로 ${BALL_LABELS[reward.type]} 몬스터볼 ${reward.amount}개를 획득했습니다.`
+                : `[${place}] 구역을 열심히 조사했으나, 아쉽게도 아무런 수확을 얻지 못했습니다. (꽝)`;
+
+            if (success) {
+                const data = getPlayerData() || { balls: {} };
+                const balls = data.balls || { normal: 0, super: 0, hyper: 0, master: 0 };
+                balls[reward.type] += reward.amount;
+                data.balls = balls;
+                setPlayerData(data);
+                updateBallDisplay();
+            }
+
+            typeWriter(message, () => {
+                showRewardPopup(success, success ? `${BALL_LABELS[reward.type]} 몬스터볼 ${reward.amount}개 획득!` : '아무것도 획득하지 못했습니다...');
+                setTimeout(checkCooldown, 2000);
+            });
+        }
+
+        function showRewardPopup(success, message) {
+            document.getElementById('rewardTitle').textContent = success ? '✨ 탐색 성공!' : '❌ 탐색 실패';
+            const text = document.getElementById('rewardText');
+            text.textContent = message;
+            text.className = success ? 'reward-item' : 'reward-item fail';
+
+            document.getElementById('rewardPopup').classList.add('show');
+            document.getElementById('overlay').classList.add('show');
+        }
+
+        function closeRewardPopup() {
+            document.getElementById('rewardPopup').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function checkCooldown() {
+            clearTimeout(cooldownTimerId);
+
+            const lastTime = getStorage(STORAGE_KEYS.LAST_FARMING);
+            if (!lastTime) {
+                toggleFarmingButtons(true);
+                if (!isTyping) {
+                    document.getElementById('dialogue-text').textContent = '어느 구역을 탐색하시겠습니까? 탐색 장소를 정해 주십시오.';
+                }
+                return;
+            }
+
+            const timePassed = Date.now() - Number(lastTime);
+            const remaining = COOLDOWN_TIME - timePassed;
+
+            if (remaining > 0) {
+                toggleFarmingButtons(false);
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                const secString = seconds < 10 ? `0${seconds}` : seconds;
+
+                if (!isTyping) {
+                    document.getElementById('dialogue-text').textContent = `현재 시스템 재정비 중... 레이더 충전까지 [ ${minutes}:${secString} ] 남음.`;
+                }
+                cooldownTimerId = setTimeout(checkCooldown, 1000);
+            } else {
+                toggleFarmingButtons(true);
+                if (!isTyping) {
+                    document.getElementById('dialogue-text').textContent = '어느 구역을 탐색하시겠습니까? 탐색 장소를 정해 주십시오.';
+                }
+            }
+        }
+
+        function resetCooldownAdmin() {
+            clearTimeout(cooldownTimerId);
+            removeStorage(STORAGE_KEYS.LAST_FARMING);
+            isTyping = false;
+            clearTimeout(typingTimer);
+            toggleFarmingButtons(true);
+            document.getElementById('dialogue-text').textContent = '⚡ 어드민 권한: 파밍 쿨타임이 초기화되었습니다! 다시 탐색하십시오.';
+        }
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'F2') {
+                event.preventDefault();
+                if (isAdminMode()) resetCooldownAdmin();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            ensurePlayerData();
+            renderAdminControls();
+            updateBallDisplay();
+            checkCooldown();
+        });
+    </script>
+</body>
+</html>

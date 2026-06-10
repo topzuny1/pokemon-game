@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon - 가이드</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body {
+            min-height: 100vh;
+            background-color: #0b0e14;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding: 18px;
+            color: #e2e8f0;
+            overflow-y: auto;
+        }
+
+        /* 포켓로그 스타일을 가미한 모던 북 디자인 */
+        .rogue-book {
+            width: min(820px, 94vw);
+            max-height: 92vh;
+            background: #0f172a;
+            border: 4px solid #3b82f6;
+            border-radius: 20px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+            display: flex; position: relative; overflow: hidden;
+        }
+
+        /* 상단 네비게이션 헤더 (뒤로가기 포함) */
+        .header-bar {
+            position: absolute; top: 0; left: 0; width: 100%;
+            height: 50px; background: rgba(30, 41, 59, 0.8);
+            border-bottom: 2px solid #334155;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 18px; z-index: 10;
+        }
+        .header-title { font-weight: bold; color: #3b82f6; letter-spacing: 1px; font-size: 0.95rem; }
+        
+        /* 포켓로그 스타일 뒤로가기 버튼 */
+        .back-btn {
+            background: #1e293b; color: #94a3b8;
+            border: 2px solid #334155; padding: 6px 16px;
+            border-radius: 8px; text-decoration: none; font-size: 0.9rem;
+            font-weight: 600; transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: #3b82f6; color: #fff; border-color: #60a5fa;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+        }
+
+        /* 양쪽 페이지 배분 */
+        .page-content {
+            display: flex; width: 100%; height: 100%; min-height: 0; padding-top: 50px;
+        }
+        .left-page, .right-page {
+            flex: 1; padding: 16px; display: flex; flex-direction: column;
+        }
+        .left-page {
+            border-right: 2px solid #1e293b;
+            overflow: hidden;
+            position: relative;
+        }
+        .left-page-inner {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 6px;
+            padding-bottom: 10px;
+        }
+
+        .book-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            word-break: keep-all;
+        }
+        .highlight { color: #f59e0b; font-weight: bold; } /* 주황빛 포인트 강조 */
+
+        .left-page::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            pointer-events: none;
+            background: linear-gradient(transparent, #0f172a 90%);
+        }
+
+        .img-frame {
+            width: 100%; height: 220px; border: 3px solid #334155;
+            border-radius: 12px; overflow: hidden; background: #1e293b;
+        }
+        .img-frame img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); }
+
+        @media (max-width: 720px) {
+            .rogue-book { width: 96vw; height: auto; min-height: 500px; }
+            .page-content { flex-direction: column; padding-top: 45px; }
+            .left-page, .right-page { padding: 14px; }
+            .left-page { border-right: none; border-bottom: 2px solid #1e293b; }
+            .img-frame { height: 180px; }
+            .book-text { font-size: 0.95rem; line-height: 1.5; }
+            .header-bar { height: 48px; padding: 0 14px; }
+            .header-title { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="rogue-book">
+        <div class="header-bar">
+            <span class="header-title">📖 SYSTEM MANUAL</span>
+            <a href="index.html" class="back-btn">◀ BACK (뒤로가기)</a>
+        </div>
+
+        <div class="page-content">
+            <div class="left-page">
+                <div class="left-page-inner">
+                    <div class="book-text">
+                        <p>안녕하세요, 트레이너님.</p>
+                    <br>
+                    <br>
+                    <p class="highlight">"야생에서 포켓몬을 포획하면 도감에 등록되고 파밍은 파밍처에서 할 수 있습니다."</p>
+                    <br>
+                    <p class="highlight">🎯 기본 포획 확률:</p>
+                    <p>🔴 전설: 0.5% (매우 낮음)</p>
+                    <p>🟠 희귀: 40%</p>
+                    <p>⚪ 일반: 60%</p>
+                    <br>
+                    <p class="highlight">💊 몬스터볼별 배수:</p>
+                    <p>🔴 일반: 1.0배</p>
+                    <p>🟠 슈퍼: 2.5배</p>
+                    <p>🟡 하이퍼: 4.0배</p>
+                    <p>🟣 마스터: 10.0배</p>
+                    <br>
+                    <p>준비가 완료되었다면 상단의 가이드를 숙지하고 필드로 나아가 가치를 증명하십시오.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-page">
+                <div class="img-frame">
+                    <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600" alt="포켓로그 스타일 배경">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,180 @@
+/* 기본 리셋 및 포켓로그 감성 설정 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body, html {
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 18px;
+    background-color: #0b0e14;
+}
+
+/* css/style.css 파일 내부에 반드시 있어야 하는 코드 */
+
+#bg-slider {
+    /* 이 3줄이 있어야 사진이 화면 크기에 맞게 쫙 늘어납니다 */
+    background-size: cover !important;       
+    background-position: center !important;   
+    background-repeat: no-repeat !important;  
+}
+
+/* #bg-overlay 부분을 찾아서 아래 코드로 덮어씌워 주세요 */
+#bg-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; /* -2인 bg-slider 바로 위에 배치됨 */
+    
+    /* 💡 기존 rgba의 맨 뒤 숫자(오파시티)를 0.3, 0.6 정도로 낮춰 사진이 비쳐 보이게 만듭니다 */
+    background: radial-gradient(circle, rgba(16, 28, 54, 0.3) 0%, rgba(7, 11, 21, 0.6) 100%);
+    
+    pointer-events: none; /* 클릭 이벤트가 버튼을 방해하지 않도록 방어 */
+}
+
+/* 포켓로그 레이아웃 컨테이너 */
+.main-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: min(100%, 520px);
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0 14px 24px;
+}
+
+/* 로고/타이틀 스타일 */
+h1 {
+    font-size: clamp(2.8rem, 6vw, 4.2rem);
+    margin-bottom: 24px;
+    letter-spacing: 4px;
+    color: #ffffff;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-shadow: 0 0 18px rgba(59, 130, 246, 0.6), 0 4px 10px rgba(0, 0, 0, 0.7);
+}
+
+.pokemon-rotator {
+    width: min(220px, 80vw);
+    height: min(220px, 80vw);
+    margin: 0 auto 24px;
+    border-radius: 22px;
+    background: rgba(15, 23, 42, 0.82);
+    border: 2px solid rgba(96, 165, 250, 0.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 26px rgba(59, 130, 246, 0.18);
+}
+
+.pokemon-rotator img {
+    width: 170px;
+    height: 170px;
+    object-fit: contain;
+    animation: floatPokemon 5s ease-in-out infinite;
+}
+
+@keyframes floatPokemon {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+
+/* 반응형 화면 축소 */
+@media (max-width: 520px) {
+    body, html {
+        align-items: flex-start;
+        padding: 12px;
+    }
+
+    .main-container {
+        width: min(100%, 100%);
+        padding: 0 10px 20px;
+    }
+
+    h1 {
+        font-size: 3.2rem;
+        letter-spacing: 3px;
+        margin-bottom: 18px;
+    }
+
+    .pokemon-rotator {
+        width: min(180px, 70vw);
+        height: min(180px, 70vw);
+        margin-bottom: 20px;
+    }
+
+    .menu-group {
+        padding: 18px;
+        gap: 10px;
+    }
+
+    .menu-btn {
+        font-size: 0.95rem;
+        padding: 10px 16px;
+        padding-left: 20px;
+    }
+}
+
+/* 포켓로그식 깔끔한 메뉴 그리드 상자 */
+.menu-group {
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid #3b82f6; /* 포켓로그 테마 블루 */
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(100%, 360px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(59, 130, 246, 0.18);
+}
+
+/* 포켓로그 스타일 메뉴 버튼 */
+.menu-btn {
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left; /* 포켓로그 메뉴 특유의 좌측 정렬 */
+    padding-left: 22px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* 마우스 호버 시 포켓로그 하이라이트 효과 (네온 블루) */
+.menu-btn:hover {
+    color: #ffffff;
+    background: #3b82f6;
+    border-color: #60a5fa;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    transform: translateX(5px); /* 우측으로 살짝 밀리는 효과 */
+}
+
+/* 선택된 버튼 앞에 생기는 포켓로그식 인디케이터 화살표 기호 */
+.menu-btn:hover::before {
+    content: '▶';
+    position: absolute;
+    left: 8px;
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+.menu-btn:active {
+    transform: scale(0.98) translateX(5px);
+}

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Game - 메인</title>
+    <style>
+        body { min-height: 100vh; background-color: #0b0e14; color: #ffffff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; margin: 0; box-sizing: border-box; }
+        .main-container { width: min(100%, 90vw); max-width: 600px; background: rgba(15, 23, 42, 0.8); border: 2px solid #334155; border-radius: 16px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        
+        /* ⚡ 어드민 제어부 스타일 */
+        .admin-control-box { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 15px; }
+        .admin-toggle-btn { background: #475569; color: #f8fafc; border: 1px solid #64748b; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+        .admin-toggle-btn:hover { background: #64748b; }
+        .admin-status-text { font-size: 0.95rem; font-weight: bold; color: #fbbf24; height: 20px; text-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
+
+        h1 { font-size: 2.5rem; color: #f59e0b; margin-top: 5px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
+        .floor-display { font-size: 1.3rem; color: #3b82f6; font-weight: bold; margin-bottom: 20px; }
+        
+        /* 💡 게임 이용 설명 탭 스타일 */
+        .guide-section { background: rgba(30, 41, 59, 0.5); border: 1px solid #334155; border-radius: 10px; padding: 15px; margin-bottom: 25px; text-align: left; font-size: 0.95rem; line-height: 1.6; color: #cbd5e1; }
+        .guide-section strong { color: #f59e0b; }
+        
+        /* 메뉴 버튼 레이아웃 */
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .menu-btn { padding: 16px; font-size: 1.2rem; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s; color: #0b0e14; }
+        
+        .wild-btn { background: #34d399; }
+        .wild-btn:hover { background: #10b981; transform: translateY(-2px); }
+        
+        /* 🎒 파밍 탭 버튼 */
+        .farm-btn { background: #fbbf24; }
+        .farm-btn:hover { background: #d97706; transform: translateY(-2px); }
+
+        /* 📜 설명서 이동 버튼 */
+        .desc-btn { background: #a855f7; color: white; }
+        .desc-btn:hover { background: #9333ea; transform: translateY(-2px); }
+        
+        /* 📖 도감 버튼 */
+        .pokedex-toggle-btn { background: #3b82f6; color: white; }
+        .pokedex-toggle-btn:hover { background: #2563eb; transform: translateY(-2px); }
+        
+        /* 도감 컨텐츠 영역 (애니메이션 접기/펼치기) */
+        .pokedex-section { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, opacity 0.3s ease; opacity: 0; background: #111827; border-radius: 12px; border: 0 solid #475569; text-align: left; }
+        .pokedex-section.open { max-height: 2000px; opacity: 1; border-width: 2px; padding: 20px; margin-top: 15px; }
+        
+        .pokedex-title { font-size: 1.5rem; color: #f59e0b; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #334155; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .pokedex-stats { font-size: 0.95rem; color: #94a3b8; }
+        
+        .rarity-group { margin-bottom: 20px; }
+        .rarity-header { font-size: 1.1rem; font-weight: bold; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; display: inline-block; }
+        .rarity-일반 { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid #94a3b8; }
+        .rarity-희귀 { background: rgba(245, 158, 11, 0.2); color: #fef08a; border: 1px solid #f59e0b; }
+        .rarity-전설 { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; }
+        
+        .pokemon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
+        .pokedex-card { background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 0.8rem; font-weight: bold; }
+        .pokedex-card img { width: 55px; height: 55px; object-fit: contain; }
+        .pokedex-card .p-name { margin-top: 5px; color: #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+        .empty-msg { color: #4b5563; font-style: italic; font-size: 0.9rem; padding: 10px; }
+        
+        /* 보상 배너 */
+        .reward-banner { background: linear-gradient(135deg, #fbbf24, #d97706); color: #0b0e14; font-weight: 900; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: none; font-size: 1rem; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.9; } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.9; } }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="admin-control-box">
+            <button class="admin-toggle-btn" onclick="toggleAdminMode()">🛠️ 어드민 모드 토글</button>
+            <div id="adminStatusText" class="admin-status-text"></div>
+        </div>
+
+        <h1>POKEMON</h1>
+        <div class="floor-display" id="floorDisplay">현재 위치: 1층</div>
+        
+        <div id="rewardBanner" class="reward-banner">🎉 도감 등록 보상 지급 완료!</div>
+
+        <div class="guide-section">
+            🍀 <strong>포켓몬 어드벤처에 오신 것을 환영합니다!</strong><br>
+            • 야생 구역에서 포켓몬을 포획하고 100층 최정상에 도전하세요.<br>
+            • 자세한 게임 규칙 및 가이드는 아래 <strong>상세 설명서</strong>를 확인하세요!
+        </div>
+
+        <div class="menu-buttons">
+            <button class="menu-btn wild-btn" onclick="location.href='wild.html'">⚔️ 야생 구역으로 진입</button>
+            <button class="menu-btn farm-btn" onclick="location.href='farm.html'">🎒 몬스터볼 파밍처 이동</button>
+            <button class="menu-btn desc-btn" onclick="location.href='description.html'">📜 게임 상세 설명서 보기</button>
+            <button class="menu-btn pokedex-toggle-btn" onclick="togglePokedex()">📖 포켓몬 도감 열기 <span id="toggleArrow">▼</span></button>
+        </div>
+        
+        <div id="pokedexSection" class="pokedex-section">
+            <div class="pokedex-title">
+                <span>포켓몬 도감</span>
+                <span class="pokedex-stats" id="pokedexStats">등록 수: 0마리</span>
+            </div>
+            
+            <div class="rarity-group">
+                <div class="rarity-header rarity-전설">🔴 전설 포켓몬</div>
+                <div class="pokemon-grid" id="grid-전설"><div class="empty-msg">아직 발견하지 못했습니다.</div></div>
+            </div>
+            
+            <div class="rarity-group">
+                <div class="rarity-header rarity-희귀">🟠 희귀 포켓몬</div>
+                <div class="pokemon-grid" id="grid-희귀"><div class="empty-msg">아직 발견하지 못했습니다.</div></div>
+            </div>
+            
+            <div class="rarity-group">
+                <div class="rarity-header rarity-일반">⚪ 일반 포켓몬</div>
+                <div class="pokemon-grid" id="grid-일반"><div class="empty-msg">아직 발견하지 못했습니다.</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateAdminDisplay() {
+            const isAdmin = localStorage.getItem('adminMode') === 'true';
+            const statusText = document.getElementById('adminStatusText');
+            if (isAdmin) {
+                statusText.textContent = '⚡ 어드민 모드가 켜져 있습니다 (확률 100% / 전설 업)';
+            } else {
+                statusText.textContent = '';
+            }
+        }
+
+        function toggleAdminMode() {
+            const isAdmin = localStorage.getItem('adminMode') === 'true';
+            localStorage.setItem('adminMode', !isAdmin);
+            updateAdminDisplay();
+        }
+
+        function togglePokedex() {
+            const section = document.getElementById('pokedexSection');
+            const arrow = document.getElementById('toggleArrow');
+            const btn = document.querySelector('.pokedex-toggle-btn');
+            
+            if (section.classList.contains('open')) {
+                section.classList.remove('open');
+                arrow.textContent = '▼';
+                btn.childNodes[0].textContent = '📖 포켓몬 도감 열기 ';
+            } else {
+                section.classList.add('open');
+                arrow.textContent = '▲';
+                btn.childNodes[0].textContent = '📖 포켓몬 도감 접기 ';
+                renderPokedex(); 
+            }
+        }
+
+        function renderPokedex() {
+            const caughtData = JSON.parse(localStorage.getItem('caughtPokemons')) || {};
+            const totalCount = Object.keys(caughtData).length;
+            document.getElementById('pokedexStats').textContent = `등록 수: ${totalCount}마리`;
+
+            checkPokedexRewards(totalCount);
+
+            const grids = { '일반': document.getElementById('grid-일반'), '희귀': document.getElementById('grid-희귀'), '전설': document.getElementById('grid-전설') };
+            Object.values(grids).forEach(g => g.innerHTML = '');
+            const counters = { '일반': 0, '희귀': 0, '전설': 0 };
+
+            Object.values(caughtData).forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'pokedex-card';
+                card.innerHTML = `
+                    <img src="${p.image}" alt="${p.koreanName}">
+                    <div class="p-name">${p.koreanName}</div>
+                `;
+                if (grids[p.rarity]) {
+                    grids[p.rarity].appendChild(card);
+                    counters[p.rarity]++;
+                }
+            });
+
+            Object.keys(grids).forEach(key => {
+                if (counters[key] === 0) {
+                    grids[key].innerHTML = '<div class="empty-msg">아직 발견하지 못했습니다.</div>';
+                }
+            });
+        }
+
+        function checkPokedexRewards(currentCount) {
+            let lastRewardedMilestone = parseInt(localStorage.getItem('lastRewardedMilestone')) || 0;
+            
+            if (currentCount >= lastRewardedMilestone + 10) {
+                const rewardMultiplier = Math.floor((currentCount - lastRewardedMilestone) / 10);
+                
+                let normalReward = 10 * rewardMultiplier;
+                let superReward = 5 * rewardMultiplier;
+                let hyperReward = 5 * rewardMultiplier;
+
+                let normalCount = (parseInt(localStorage.getItem('ball_normal')) || 5) + normalReward;
+                let superCount = (parseInt(localStorage.getItem('ball_super')) || 2) + superReward;
+                let hyperCount = (parseInt(localStorage.getItem('ball_hyper')) || 1) + hyperReward;
+                let farmNormal = (parseInt(localStorage.getItem('monsterBalls')) || 0) + normalReward;
+
+                localStorage.setItem('ball_normal', normalCount);
+                localStorage.setItem('ball_super', superCount);
+                localStorage.setItem('ball_hyper', hyperCount);
+                localStorage.setItem('monsterBalls', farmNormal);
+
+                localStorage.setItem('lastRewardedMilestone', lastRewardedMilestone + (rewardMultiplier * 10));
+
+                const banner = document.getElementById('rewardBanner');
+                banner.textContent = `🎉 도감 등록 ${currentCount}마리 달성 보상: 일반볼+${normalReward}개, 슈퍼볼+${superReward}개, 하이퍼볼+${hyperReward}개 지급 완료!`;
+                banner.style.display = 'block';
+                setTimeout(() => { banner.style.display = 'none'; }, 6000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedFloor = localStorage.getItem('currentFloor') || 1;
+            document.getElementById('floorDisplay').textContent = `현재 위치: ${savedFloor}층`;
+            updateAdminDisplay();
+
+            const caughtData = JSON.parse(localStorage.getItem('caughtPokemons')) || {};
+            checkPokedexRewards(Object.keys(caughtData).length);
+        });
+    </script>
+</body>
+</html>
